@@ -15,12 +15,6 @@ using Random: seed!
 using SpecialFunctions: gamma
 using StatsBase: fweights, mean, pweights, sample, std, var
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Equation 4.4
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-width(s_prime, N, t_q) = 2 * s_prime * t_q / sqrt(N)
-
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Data and Table 4.2 
@@ -46,8 +40,6 @@ mean_birdspertow = sum(t42_birds) / sum(t42_tows)
 
 t43_birds = 0:17 
 t43_captures = [ 807, 37, 27, 8, 4, 4, 1, 3, 1, 0, 0, 2, 1, 1, 0, 0, 0, 1 ]
-
-# I have not entered the data from Table 4.3, but the results from the text are 
 
 t43_totalcaptures = sum([ t43_captures[i] * t43_birds[i] for i ∈ eachindex(t43_captures) ])
 #250
