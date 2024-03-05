@@ -346,6 +346,11 @@ chanceofsuccess = [
 
 fig4_2, ax1 = lines(ntowvec, chanceofsuccess)
 
+# add a line for the number of tows in the dataset 
+vlines!(ax1, sum(t43_captures); color=:black, linestyle=:dot)
+
+fig4_2
+
 # Note that we cannot use the NegativeBinomial distribution for the summarized data as the 
 # calculated k parameter is negative 
 
@@ -360,7 +365,7 @@ seed!(2)
 chanceofsuccesspois = [ 
     estimateprogrammesuccess(
         ntow; 
-        Nsim=150, d=(t43_m / 4), k=t43_m, m=t43_m, tq=1.645, 
+        Nsim=150, d=(t43_m / 4), k=_t42_k, m=t42_m, tq=1.645, 
         probfunction=probabilities_C_ij_pois
     ) 
     for ntow in ntowvec
@@ -369,6 +374,7 @@ chanceofsuccesspois = [
 let 
     ax2 = Axis(fig4_2[2, 1])
     lines!(ax2, ntowvec, chanceofsuccesspois)
+    vlines!(ax2, sum(t43_captures); color=:black, linestyle=:dot)
 end
 
 fig4_2
