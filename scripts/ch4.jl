@@ -297,6 +297,8 @@ let
 
     Label(fig4_2.layout[1:2, 0], "Chance of success"; fontsize=11.84, rotation=π/2, tellheight=false)
     Label(fig4_2.layout[3, 1], "Number of tows observed"; fontsize=11.84, tellwidth=false) 
+    Label(fig4_2.layout[1, 2], "Negative binomial"; fontsize=11.84, rotation=-π/2, tellheight=false)
+    Label(fig4_2.layout[2, 2], "Poisson"; fontsize=11.84, rotation=-π/2, tellheight=false)
 end
 
 fig4_2
