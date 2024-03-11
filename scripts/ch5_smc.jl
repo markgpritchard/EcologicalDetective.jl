@@ -1,3 +1,6 @@
+using DrWatson
+@quickactivate "EcologicalDetective.jl"
+
 using Distributions
 using Plots
 using DataFrames
