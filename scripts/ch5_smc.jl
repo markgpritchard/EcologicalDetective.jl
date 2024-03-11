@@ -137,7 +137,7 @@ end
 # param_maxs=[3,3,1];
 Gprofiles = goodness_of_fit_profiles(X, Yobs, param_mins, param_maxs, param_incs, quadratic_model);
 param_range_vecs = [];
-for i in 1:num_params
+for i in 1:length(param_mins);
     push!(param_range_vecs,param_mins[i]:param_incs[i]:param_maxs[i]);
 end
 plot(param_range_vecs,Gprofiles,layout=3,legend=false,xlabel="param",ylabel="Marginal SSQ",color="black",lwd=1.5,yaxis=:log)
@@ -146,35 +146,32 @@ println(ssq_fit)
 
 
 # Model comparison 
-function penalizedSSQ(X,Yobs,param_mins,param_maxs,param_incs)
+function penalizedSSQ(X,Yobs,param_mins,param_maxs,param_incs,run_model)
     n = length(X);
     m = length(param_mins);
-    return sum_of_squares(X,Yobs,param_mins,param_maxs,param_incs)[2] / (n - 2 * m);
+    return sum_of_squares(X,Yobs,param_mins,param_maxs,param_incs,run_model)[2] / (n - 2 * m);
 end
-param_mins = [0,0,0];
-param_maxs = [3,2,1];
-param_incs = [0.1,0.05,0.25];
 penalizedSSQs_vec = [];
 
 run_model = constant_model
 param_mins_temp = param_mins[1:1];
 param_maxs_temp = param_maxs[1:1];
 param_incs_temp = param_incs[1:1];
-out_temp = penalizedSSQ(X,Yobs,param_mins_temp,param_maxs_temp,param_incs_temp);
+out_temp = penalizedSSQ(X,Yobs,param_mins_temp,param_maxs_temp,param_incs_temp,constant_model);
 push!(penalizedSSQs_vec,out_temp);
 
 run_model = linear_model
 param_mins_temp = param_mins[1:2];
 param_maxs_temp = param_maxs[1:2];
 param_incs_temp = param_incs[1:2];
-out_temp = penalizedSSQ(X,Yobs,param_mins_temp,param_maxs_temp,param_incs_temp);
+out_temp = penalizedSSQ(X,Yobs,param_mins_temp,param_maxs_temp,param_incs_temp,linear_model);
 push!(penalizedSSQs_vec,out_temp);
 
 run_model = quadratic_model
 param_mins_temp = param_mins[1:3];
 param_maxs_temp = param_maxs[1:3];
 param_incs_temp = param_incs[1:3];
-out_temp = penalizedSSQ(X,Yobs,param_mins_temp,param_maxs_temp,param_incs_temp);
+out_temp = penalizedSSQ(X,Yobs,param_mins_temp,param_maxs_temp,param_incs_temp,quadratic_model);
 push!(penalizedSSQs_vec,out_temp);
 
 println(penalizedSSQs_vec)
