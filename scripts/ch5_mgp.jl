@@ -108,6 +108,7 @@ pred_ys = [ A_star + B_star * x + C_star * x^2 for x in xs ]
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 function goodnessoffitprofile(xs, ys, vrange; A=:fixed, B=:fixed, C=:fixed)
+    # if more than one parameter is left as `:fixed` this will lead to unexpected results 
     gof = zeros(length(vrange))
     for (i, v) in enumerate(vrange)
         @unpack S_min = goodnessoffitprofile_ss(xs, ys, v; A, B, C)
@@ -145,10 +146,12 @@ fig5_1 = let
     for (i, gof) in enumerate(
         [ goodnessoffitvals_A, goodnessoffitvals_B, goodnessoffitvals_C ]
     )
-        lines!(axs[i], -5:0.01:5, gof; color=:black) 
+        inds = findall(x -> x <= 1000, gof)
+        lines!(axs[i], (-5:0.01:5)[inds], gof[inds]; color=:black) 
     end
+    linkxaxes!(axs...)
     for (i, lbl) in enumerate([ "A", "B", "C" ])
-        Label(fig.layout[2 * i, 1], lbl; tellwidth=false)
+        Label(fig.layout[2*i, 1], lbl; tellwidth=false)
     end
     Label(fig.layout[1:5, 0], "Goodness of fit"; rotation=π/2, tellheight=false)
     for r in [ 1, 3, 5 ] rowgap!(fig.layout, r, 5) end
@@ -164,7 +167,7 @@ function penalizedsumsquares(xs, ys, args...)
     @unpack S_min = sumsquares(xs, ys, args...) 
     m = length(args)
     n = length(ys)
-    return S_min / (n - 2*m)
+    return S_min / (n - 2 * m)
 end  
 
 ## "Model 1"
