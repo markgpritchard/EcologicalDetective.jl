@@ -45,6 +45,11 @@ function gen_fake_data_unif(X, param, Wmin, Wmax, run_model)
     return out .+ noise;
 end    
 
+function cubic_model(X, param)
+    out = param[1] .+ param[2] .* X .+ param[3] .* X.^2. + param[4] .* X.^3.;
+    return out;
+end
+
 function quadratic_model(X, param)
     out = param[1] .+ param[2] .* X .+ param[3] .* X.^2;
     return out;
@@ -90,7 +95,7 @@ DataFrame("X"=>X,
 
 # Extra stuff
 # goodness of fit profile
-function goodness_of_fit_profiles(X,Yobs,param_mins,param_maxs,param_incs,run_model) 
+function goodness_of_fit_profiles(X,Yobs,param_mins,param_maxs,param_incs,param_of_interest_vec,run_model) 
     n = length(X);
     num_params = length(param_mins);
     # Check the data and Xi are same length, and the param vecs
@@ -105,7 +110,6 @@ function goodness_of_fit_profiles(X,Yobs,param_mins,param_maxs,param_incs,run_mo
     # Loop over the params, getting an profile for each, storing these in a vector
     profile_vecs = [];
     for i in 1:num_params
-        param_of_interest_vec = param_mins[i]:param_incs[i]:param_maxs[i]
         profile_temp = zeros(Float64, length(param_of_interest_vec));
         for j in 1:length(param_of_interest_vec)
             # For this parameter value, get the other combinations
@@ -134,16 +138,9 @@ function goodness_of_fit_profiles(X,Yobs,param_mins,param_maxs,param_incs,run_mo
 end
 
 # Generate the profiles and plot
-# (it has jagged lines unless increment is small)
-# param_mins=[-3,0,0];
-# param_incs=[0.01,0.01,0.01];
-# param_maxs=[3,3,1];
-Gprofiles = goodness_of_fit_profiles(X, Yobs, param_mins, param_maxs, param_incs, quadratic_model);
-param_range_vecs = [];
-for i in 1:length(param_mins);
-    push!(param_range_vecs,param_mins[i]:param_incs[i]:param_maxs[i]);
-end
-plot(param_range_vecs,Gprofiles,layout=3,legend=false,xlabel="param",ylabel="Marginal SSQ",color="black",lwd=1.5,yaxis=:log)
+param_of_interest_vec = -5:0.1:5;
+Gprofiles = goodness_of_fit_profiles(X, Yobs, param_mins, param_maxs, param_incs,param_of_interest_vec,quadratic_model);
+plot(param_of_interest_vec,Gprofiles,layout=3,legend=false,xlabel="param",ylabel="Marginal SSQ",color="black",lwd=1.5,ylims=[0,1000])
 println(ssq_fit)
 
 
@@ -175,6 +172,13 @@ param_mins_temp = param_mins[1:3];
 param_maxs_temp = param_maxs[1:3];
 param_incs_temp = param_incs[1:3];
 out_temp = penalizedSSQ(X,Yobs,param_mins_temp,param_maxs_temp,param_incs_temp,quadratic_model);
+push!(penalizedSSQs_vec,out_temp);
+
+run_model = cubic_model
+param_mins_temp = param_mins[[1,2,3,3]];
+param_maxs_temp = param_maxs[[1,2,3,3]];
+param_incs_temp = param_incs[[1,2,3,3]];
+out_temp = penalizedSSQ(X,Yobs,param_mins_temp,param_maxs_temp,param_incs_temp,cubic_model);
 push!(penalizedSSQs_vec,out_temp);
 
 println(penalizedSSQs_vec)
