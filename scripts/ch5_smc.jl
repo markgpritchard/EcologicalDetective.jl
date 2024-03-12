@@ -140,7 +140,7 @@ end
 # Generate the profiles and plot
 param_of_interest_vec = -5:0.1:5;
 Gprofiles = goodness_of_fit_profiles(X, Yobs, param_mins, param_maxs, param_incs,param_of_interest_vec,quadratic_model);
-plot(param_of_interest_vec,Gprofiles,layout=3,legend=false,xlabel="param",ylabel="Marginal SSQ",color="black",lwd=1.5,ylims=[0,1000])
+plot(param_of_interest_vec,Gprofiles,layout=grid(3,1),legend=false,ylabel="Marginal SSQ",color="black",lwd=1.5,ylims=[0,1000])
 println(ssq_fit)
 
 
