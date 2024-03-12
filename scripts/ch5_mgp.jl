@@ -17,27 +17,27 @@ using Random: seed!
 # Pseudocode 5.1
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-function sumsquares(xs, ys, A, B=[ 0 ], C=[ 0 ]) 
+function sumsquares(xs, ys, A, B=zeros(Int, 1), C=zeros(Int, 1)) 
     S_min = Inf 
     A_star = minimum(A)
     B_star = minimum(B)
     C_star = minimum(C)
-    for _A in A, _B in B, _C in C 
-        S = calcsumsquares(xs, ys, _A, _B, _C)
+    for A_i in A, B_i in B, C_i in C 
+        S = calcsumsquares(xs, ys, A_i, B_i, C_i)
         if S < S_min 
             S_min = S 
-            A_star = _A
-            B_star = _B
-            C_star = _C
+            A_star = A_i
+            B_star = B_i
+            C_star = C_i
         end
     end
     return @ntuple A_star B_star C_star S_min
 end
 
-function calcsumsquares(xs, ys, _A, _B, _C)
+function calcsumsquares(xs, ys, A_i, B_i, C_i)
     S = 0.0
     for (x, y) in zip(xs, ys) 
-        y_pre = _A + _B * x + _C * x^2
+        y_pre = A_i + B_i * x + C_i * x^2
         S += (y_pre - y)^2
     end
     return S 
@@ -111,6 +111,7 @@ function goodnessoffitprofile(xs, ys, vrange; A=:fixed, B=:fixed, C=:fixed)
     # if more than one parameter is left as `:fixed` this will lead to unexpected results 
     gof = zeros(length(vrange))
     for (i, v) in enumerate(vrange)
+        # run `sumsquares` with "fixed" parameter at each each value in `vrange` and save `S_min`
         @unpack S_min = goodnessoffitprofile_ss(xs, ys, v; A, B, C)
         gof[i] = S_min
     end
@@ -118,8 +119,12 @@ function goodnessoffitprofile(xs, ys, vrange; A=:fixed, B=:fixed, C=:fixed)
 end
 
 function goodnessoffitprofile_ss(xs, ys, fixedv; A, B, C)
-    args = [ goodnessoffitprofile_ssv(Z, fixedv) for Z in [ A, B, C ] ]
-    return sumsquares(xs, ys, args...) 
+    return sumsquares(
+        xs, ys, 
+        goodnessoffitprofile_ssv(A, fixedv),
+        goodnessoffitprofile_ssv(B, fixedv),
+        goodnessoffitprofile_ssv(C, fixedv)
+    ) 
 end
 
 function goodnessoffitprofile_ssv(v::Symbol, fixedv)
@@ -142,7 +147,7 @@ goodnessoffitvals_C = goodnessoffitprofile(xs, ys, -5:0.01:5; A=0:0.1:3, B=0:0.0
 
 fig5_1 = let 
     fig = Figure()
-    axs = [ Axis(fig[2 * i - 1, 1]) for i in 1:3 ]
+    axs = [ Axis(fig[2*i-1, 1]) for i in 1:3 ]
     for (i, gof) in enumerate(
         [ goodnessoffitvals_A, goodnessoffitvals_B, goodnessoffitvals_C ]
     )
