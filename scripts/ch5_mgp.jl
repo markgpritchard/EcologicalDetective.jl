@@ -147,7 +147,7 @@ goodnessoffitvals_C = goodnessoffitprofile(xs, ys, -5:0.01:5; A=0:0.1:3, B=0:0.0
 
 fig5_1 = let 
     fig = Figure()
-    axs = [ Axis(fig[2 * i - 1, 1]) for i in 1:3 ]
+    axs = [ Axis(fig[2*i-1, 1]) for i in 1:3 ]
     for (i, gof) in enumerate(
         [ goodnessoffitvals_A, goodnessoffitvals_B, goodnessoffitvals_C ]
     )
