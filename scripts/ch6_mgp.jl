@@ -14,11 +14,10 @@ using DataFrames
 using Random: seed!
 using StatsBase: fweights, mean, sample
 
-# The functions were initially written with `DataFrames`, then for Pseudocode 6.3 re-written 
-# for vectors of egg numbers and clutch sizes, leading to some redundancy. The functions
-# using DataFrames are much slower than those using the reformatted data, one of them
-# taking 50 seconds vs 0.8 seconds. I have therefore commented some of the function calls so
-# they won't be run unintentionally. 
+# The functions were initially written with `DataFrames`. For Pseudocode 6.3 they were
+# re-written for vectors of egg numbers and clutch sizes. The functions using DataFrames are
+# much slower than those using the reformatted data, some by a factor of 60 so some original
+# versions are now commented so they won't be run unintentionally. 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Figure 6.2
@@ -33,9 +32,30 @@ insertcols!(
     :C4 => [ table6_1.E[i] in [ 9, 14 ] ? 1 : 0 for i in axes(table6_1, 1) ],
 )
 
+function reformatdata(df; c_cols=1:4)
+    Nc = sum(sum([ getproperty(df, Symbol("C$x")) for x in c_cols ]))
+    raw_E = zeros(typeof(df.E[1]), Nc)
+    raw_C = zeros(typeof(getproperty(df, Symbol("C$(c_cols[1])"))[1]), Nc)
+
+    j = 1 
+    for (C, C_vec) in zip(c_cols, [ getproperty(df, Symbol("C$i")) for i in c_cols ])
+        for (i, E) in enumerate(df.E)
+            k = 0
+            while k < C_vec[i]
+                raw_E[j] = E 
+                raw_C[j] = C 
+                k += 1 
+                j += 1 
+            end
+        end
+    end
+
+    return @ntuple Nc raw_E raw_C
+end
+
 # Nc should be 102 
-Nc = sum(sum([ getproperty(table6_1, Symbol("C$x")) for x in 1:4 ]))
-#102
+@unpack Nc = reformatdata(table6_1)
+#Nc = 102
 
 averageclutch = [ 
     mean(1:4, fweights([ getproperty(table6_1, Symbol("C$x"))[i] for x in 1:4 ])) 
@@ -140,6 +160,7 @@ function testascending(a)
     return true
 end
         
+#=
 function sumsquares_variableclutch(cs, es, df::DataFrame; C_vec=1:4)
     @assert length(cs) == length(es) + 1 "Must have one more clutch size than switching points"
     ssq = 0
@@ -155,6 +176,7 @@ function sumsquares_variableclutch(cs, es, df::DataFrame; C_vec=1:4)
     end
     return ssq
 end
+=#
 
 function sumsquares_variableclutch(cs, es, e_vec, c_vec)
     @assert length(cs) == length(es) + 1 "Must have one more clutch size than switching points"
@@ -170,15 +192,15 @@ function sumsquares_variableclutch(cs, es, e_vec, c_vec)
     return ssq
 end
 
-function sumsquares_variableclutch(potentialcs, potentiales, n_switches::Int, data...; kwargs...)
+function sumsquares_variableclutch(potentialcs, potentiales, n_switches::Int, e_vec, c_vec; kwargs...)
     cs_star = [ potentialcs[1] for _ in 1:(n_switches + 1) ]
     es_star = [ potentiales[1] for _ in 1:n_switches ]
-    ssq_star = sumsquares_variableclutch(cs_star, es_star, data...; kwargs...)
+    ssq_star = sumsquares_variableclutch(cs_star, es_star, e_vec, c_vec; kwargs...)
     allcs = allcombinations([ potentialcs for _ in 1:(n_switches + 1) ]...) 
     for es in allcombinations([ potentiales for _ in 1:n_switches ]...)
         if testascending(es)
             for cs in allcs
-                ssq = sumsquares_variableclutch(cs, es, data...; kwargs...)
+                ssq = sumsquares_variableclutch(cs, es, e_vec, c_vec; kwargs...)
                 if ssq < ssq_star 
                     ssq_star, cs_star, es_star = ssq, cs, es
                 end
@@ -188,6 +210,11 @@ function sumsquares_variableclutch(potentialcs, potentiales, n_switches::Int, da
     return @ntuple ssq_star cs_star es_star
 end
 
+function sumsquares_variableclutch(potentialcs, potentiales, n_switches::Int, df::DataFrame; kwargs...)
+    @unpack raw_E, raw_C = reformatdata(df)
+    return sumsquares_variableclutch(potentialcs, potentiales, n_switches::Int, raw_E, raw_C; kwargs...) 
+end
+
 ssqvc2 = sumsquares_variableclutch(0:4, 0:23, 2, table6_1)
 #(ssq_star = 34, cs_star = (0, 2, 3), es_star = (0, 8))
 # Note that the first switch is at E = 0, so this is the same model as the one that only 
@@ -195,9 +222,9 @@ ssqvc2 = sumsquares_variableclutch(0:4, 0:23, 2, table6_1)
 ssqvc2.ssq_star / (Nc - 10)
 #0.3695652173913043
 
-#ssqvc3 = sumsquares_variableclutch(0:4, 0:23, 3, table6_1)
+ssqvc3 = sumsquares_variableclutch(0:4, 0:23, 3, table6_1)
 #(ssq_star = 33, cs_star = (2, 3, 2, 3), es_star = (8, 9, 10))
-#ssqvc3.ssq_star / (Nc - 12)
+ssqvc3.ssq_star / (Nc - 12)
 #0.36666666666666664
 
 
@@ -219,21 +246,7 @@ fig
 # Reformat data
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-raw_E = zeros(Int, Nc)
-raw_C = zeros(Int, Nc)
-
-j = 1 
-for (C, C_vec) in zip(1:4, [ getproperty(table6_1, Symbol("C$i")) for i in 1:4 ])
-    for (i, E) in enumerate(table6_1.E)
-        k = 0
-        while k < C_vec[i]
-            raw_E[j] = E 
-            raw_C[j] = C 
-            k += 1 
-            j += 1 
-        end
-    end
-end
+@unpack raw_E, raw_C = reformatdata(table6_1)
 
 # check that the functions used above work equivalently with this dataset 
 
@@ -255,8 +268,10 @@ ssqvc3 = sumsquares_variableclutch(0:4, 0:23, 3, raw_E, raw_C)
 ssqvc3.ssq_star / (Nc - 12)
 #0.36666666666666664
 
+#= 
+## Benchmark test with the old version 
 # NB, the version with vectors is tremendously faster 
-#@benchmark sumsquares_variableclutch(0:4, 0:23, 3, table6_1)
+@benchmark sumsquares_variableclutch(0:4, 0:23, 3, table6_1)
 #BenchmarkTools.Trial: 1 sample with 1 evaluation.
 # Single result which took 49.456 s (3.34% GC) to evaluate,       
 # with a memory estimate of 20.30 GiB, over 648775577 allocations.
@@ -272,7 +287,7 @@ ssqvc3.ssq_star / (Nc - 12)
 #  784 ms           Histogram: frequency by time          836 ms <
 #
 # Memory estimate: 381.15 MiB, allocs estimate: 8665647.
-
+=#
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Pseudocode 6.3
